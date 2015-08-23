@@ -1,9 +1,11 @@
-module Quotes (ConnectionEvent, quotes, Message(..)) where
+module Quotes (quotes, Message(..)) where
 
 import Signal
 import Maybe exposing (andThen)
 import Result
 import Json.Decode exposing (..)
+
+import Native.Quotes
 
 type alias SymbolSettings = (String, Int)
 
@@ -23,21 +25,21 @@ messageDecoder =
         object1 Quotes qoutes
     ]
 
-toConnectionEvent : (String, Maybe String) -> ConnectionEvent
+toConnectionEvent : (String, String) -> ConnectionEvent
 toConnectionEvent (msgType, payload) = case msgType of
     "notconnected" -> NotConnected
     "open" -> Open
     "close" -> Close
-    "message" -> Message (payload `Maybe.andThen` parseMessage)
+    "message" -> Message (parseMessage payload)
 
 parseMessage : String -> Maybe Message
 parseMessage = Result.toMaybe << decodeString messageDecoder
 
-connection : Signal (String, Maybe String) -> Signal ConnectionEvent
-connection connectionPort = Signal.map toConnectionEvent connectionPort
+connection : Signal ConnectionEvent
+connection = Signal.map toConnectionEvent Native.Quotes.quotes
 
-quotes : Signal (String, Maybe String) -> Signal Message
-quotes conn = Signal.filterMap onlyMessage (Quotes []) <| connection conn
+quotes : Signal Message
+quotes = Signal.filterMap onlyMessage (Quotes []) connection
 
 onlyMessage : ConnectionEvent -> Maybe Message
 onlyMessage event = case event of

@@ -6,8 +6,6 @@
   <body>
     <div class="app-container"></div>
     <script type="text/javascript" src="elm.js"></script>
-    <script type="text/javascript" src="Quotes.js"></script>
-    <script type="text/javascript" src="History.js"></script>
     <style>
       .symbols_trend_up {
         color: green;
@@ -17,13 +15,7 @@
       }
     </style>
     <script type="text/javascript">
-    function init(modules) {
-      var ports = {};
-      modules.forEach(function(m) { m.default(ports) });
-      var app = Elm.fullscreen(Elm.Main, ports);
-      modules.forEach(function(m) { m.init(app) });
-    }
-    init([Quotes]);
+      Elm.fullscreen(Elm.Main, {});
     </script>
   </body>
 </html>

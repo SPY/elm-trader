@@ -12,13 +12,11 @@ app = StartApp.start {
         init = (App.init, Effects.none),
         update = App.update,
         view = App.render,
-        inputs = App.inputs quotes
+        inputs = App.inputs
     }
 
 main : Signal Html
 main = app.html
-
-port quotes : Signal (String, Maybe String)
 
 port history : Signal (Task x ())
 port history = SymbolHistory.task

@@ -50,7 +50,7 @@ render addr st = div [class "app"] [
 historyToEvent : Result String SymbolHistory.History -> Event
 historyToEvent = toMaybe >> Maybe.map HistoryLoaded >> withDefault Noop
 
-inputs quotes = [
-        Signal.map Quotes <| Quotes.quotes quotes,
+inputs = [
+        Signal.map Quotes Quotes.quotes,
         Signal.map (Maybe.map historyToEvent >> withDefault Noop) <| SymbolHistory.response
     ]
