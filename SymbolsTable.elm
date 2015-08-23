@@ -8,8 +8,6 @@ import Dict exposing (..)
 import Maybe
 import String exposing (..)
 
-import Debug
-
 import Quotes
 
 type Trend = Up | Down | Neutral

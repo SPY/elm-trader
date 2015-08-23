@@ -3,13 +3,17 @@ module App (init, update, render, Event(..)) where
 import Signal exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (class)
+import Effects exposing (Effects)
 
 import Quotes
 import SymbolsTable
 
 type Event = Quotes Quotes.Message | SymbolsTable SymbolsTable.Event
 
-type alias State = { symbols : SymbolsTable.State, charts : List String }
+type alias State = {
+    symbols : SymbolsTable.State,
+    charts : List String
+}
 
 init : State
 init = {
@@ -17,13 +21,13 @@ init = {
         charts = []
     }
 
-update : Event -> State -> State
+update : Event -> State -> (State, Effects Event)
 update event st = case event of
-    Quotes msg -> { st | symbols <- SymbolsTable.update msg st.symbols }
-    SymbolsTable (SymbolsTable.OpenChart symbol) -> { st | charts <-  st.charts ++ [symbol] }
+    Quotes msg -> ({ st | symbols <- SymbolsTable.update msg st.symbols }, Effects.none)
+    SymbolsTable (SymbolsTable.OpenChart symbol) -> ({ st | charts <-  st.charts ++ [symbol] }, Effects.none)
 
 render : Address Event -> State -> Html
 render addr st = div [class "app"] [
         SymbolsTable.render (forwardTo addr SymbolsTable) st.symbols,
-        div [class "charts"] <| List.map (\sym -> span [class "chart"] [text sym]) st.charts
+        div [class "charts"] <| List.map (\sym -> div [class "chart"] [text sym]) st.charts
     ]
