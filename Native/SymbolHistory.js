@@ -13,14 +13,21 @@ Elm.Native.SymbolHistory.make = function(localRuntime) {
 
 	function curry(fn, ctx, length) {
 		var len = fn.length || length;
-		var args = []
-		return function helper() {
-			args = args.concat([].slice.call(arguments));
+		return function() {
+			var args = [].slice.call(arguments);
 			if (args.length >= len) {
 				return fn.apply(ctx || null, args);
 			}
 			else {
-				return helper;
+				return function cont() {
+					args = args.concat([].slice.call(arguments));
+					if (args.length >= len) {
+						return fn.apply(ctx || null, args);
+					}
+					else {
+						return cont;
+					}
+				};
 			}
 		}
 	}

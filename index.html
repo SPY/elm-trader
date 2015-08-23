@@ -8,7 +8,6 @@
     <script type="text/javascript" src="elm.js"></script>
     <script type="text/javascript" src="Quotes.js"></script>
     <script type="text/javascript" src="History.js"></script>
-    <script type="text/javascript" src="Native/SymbolHistory.js"></script>
     <style>
       .symbols_trend_up {
         color: green;
@@ -21,11 +20,10 @@
     function init(modules) {
       var ports = {};
       modules.forEach(function(m) { m.default(ports) });
-      var app = Elm.embed(Elm.Main, document.querySelector('.app-container'), ports);
+      var app = Elm.fullscreen(Elm.Main, ports);
       modules.forEach(function(m) { m.init(app) });
     }
     init([Quotes]);
-    // History.get('AUDUSD.m', 2015, 'M5', 54722, 67298).then(function(result) { console.log(result) });
     </script>
   </body>
 </html>
