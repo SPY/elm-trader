@@ -9,7 +9,7 @@ import App
 import SymbolHistory
 
 app = StartApp.start {
-        init = (App.init, Effects.none),
+        init = App.init,
         update = App.update,
         view = App.render,
         inputs = App.inputs

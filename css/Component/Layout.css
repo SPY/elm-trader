@@ -1,0 +1,36 @@
+.layout {
+	display: flex;
+}
+
+.layout_direction_horizontal {
+	flex-directon: row;
+}
+
+.layout_direction_vertical {
+	flex-directon: column;
+}
+
+.layout__item_autosize_yes {
+	flex-grow: 1;
+}
+
+.layout__item {
+	display: flex;
+	margin-left: 5px;
+}
+
+.layout__item:first-child {
+	margin-left: 0;
+}
+
+.layout_direction_horizontal .layout__item {
+	flex-directon: column;
+}
+
+.layout_direction_vertical .layout__item {
+	flex-directon: row;
+}
+
+.layout__item > * {
+	flex-grow: 1;
+}

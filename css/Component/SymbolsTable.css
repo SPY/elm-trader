@@ -1,0 +1,30 @@
+.symbols-table_trend_up {
+	color: green;
+}
+.symbols-table_trend_down {
+	color: red;
+}
+
+.symbols-table__name, .symbols-table__ask, .symbols-table__bid {
+	padding: 3px 5px;
+	text-align: left;
+	border-bottom: 1px solid black;
+}
+
+.symbols-table__name {
+	width: 50%;
+}
+
+.symbols-table__ask, .symbols-table__bid {
+	width: 25%;
+}
+
+.symbols-table__row {
+	cursor: pointer;
+}
+
+.symbols-table {
+	border-collapse: collapse;
+	border: 1px solid black;
+	width: 100%;
+}

@@ -25,23 +25,23 @@ type Event = OpenChart String
 symbolRow : Address Event -> (String, Symbol) -> Html
 symbolRow addr (name, symbol) = 
     let classWithTrend trend cls = case trend of
-        Up -> class <| cls ++ " symbols_trend_up"
-        Down -> class <| cls ++ " symbols_trend_down"
+        Up -> class <| cls ++ " symbols-table_trend_up"
+        Down -> class <| cls ++ " symbols-table_trend_down"
         Neutral -> class cls
     in
-    tr [class "symbols__row", onClick addr <| OpenChart name] [
-        td [class "symbols__name"] [text name],
-        td [classWithTrend symbol.ask.trend "symbols__ask"] [text <| toFixed symbol.digits symbol.ask.val],
-        td [classWithTrend symbol.bid.trend "symbols__bid"] [text <| toFixed symbol.digits symbol.bid.val]
+    tr [class "symbols-table__row", onClick addr <| OpenChart name] [
+        td [class "symbols-table__name"] [text name],
+        td [classWithTrend symbol.ask.trend "symbols-table__ask"] [text <| toFixed symbol.digits symbol.ask.val],
+        td [classWithTrend symbol.bid.trend "symbols-table__bid"] [text <| toFixed symbol.digits symbol.bid.val]
     ]
 
 render : Address Event -> State -> Html
-render addr symbols = 
-    div [class "symbols"] ([
-        tr [class "symbols__head"] [
-            th [class "symbols__name"] [text "Symbol"],
-            th [class "symbols__ask"] [text "Ask"],
-            th [class "symbols__bid"] [text "Bid"]
+render addr symbols =
+    table [class "symbols-table"] ([
+        tr [class "symbols-table__head"] [
+            th [class "symbols-table__name"] [text "Symbol"],
+            th [class "symbols-table__ask"] [text "Ask"],
+            th [class "symbols-table__bid"] [text "Bid"]
         ]
     ] ++ (List.map (symbolRow addr) <| Dict.toList symbols))
 
