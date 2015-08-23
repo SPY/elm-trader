@@ -23,7 +23,15 @@ type alias History = {
     ohlc: Array (Maybe OHLC)
 }
 
-requestBox : Signal.Mailbox (Maybe String)
+type alias Request = {
+    symbol: String,
+    period: Period,
+    year: Int,
+    from: Int,
+    to: Int
+}
+
+requestBox : Signal.Mailbox (Maybe Request)
 requestBox = Signal.mailbox Nothing
 
 responseBox : Signal.Mailbox (Maybe (Result String History))
@@ -40,12 +48,14 @@ log msg =
 
 task : Signal (Task x ())
 task =
-    let request symbol = case symbol of
-        Just sym -> (forSymbol sym |> Task.toResult) `Task.andThen` (Just >> Signal.send responseBox.address)
+    let request req = case req of
+        Just r ->
+            let t = load r.symbol r.year r.period r.from r.to in
+            (t |> Task.toResult) `Task.andThen` (Just >> Signal.send responseBox.address)
         Nothing -> Task.succeed ()
     in Signal.map request requestBox.signal
 
-request : String -> Task x ()
+request : Request -> Task x ()
 request = Just >> Signal.send requestBox.address
 
 response : Signal (Maybe (Result String History))
@@ -58,6 +68,3 @@ historyDecoder p =
     let makeOHLC o h l c = { open = o, high = h, low = l, close = c } in
     let ohlc = array <| maybe <| object4 makeOHLC ("s" := float) ("h" := float) ("l" := float) ("e" := float) in
     object2 makeHistory ("m" := medians) ("ohlc" := ohlc)
-
-forSymbol : String -> Task String History
-forSymbol symbol = load symbol 2015 M5 54722 67298

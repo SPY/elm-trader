@@ -36,7 +36,8 @@ update event st = case event of
     Quotes msg ->
         ({ st | symbols <- SymbolsTable.update msg st.symbols }, Effects.none)
     SymbolsTable (SymbolsTable.OpenChart symbol) ->
-        let requestHistory = Effects.task (SymbolHistory.request symbol) |> Effects.map (always Noop) in
+        let request = { symbol = symbol, year = 2015, period = SymbolHistory.M5, from = 54722, to = 67298 } in
+        let requestHistory = Effects.task (SymbolHistory.request request) |> Effects.map (always Noop) in
         ({ st | charts <-  st.charts ++ [symbol] }, requestHistory)
     HistoryLoaded history ->
         ({ st | history <-  st.history ++ [history] }, Effects.none)
