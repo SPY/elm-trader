@@ -1,4 +1,4 @@
-module Component.Tabs (render, Event(..), State, update, init) where
+module Component.Tabs (render, Event(..), State, update, init, activate) where
 
 import List exposing (head, filter)
 import Maybe exposing (withDefault)
@@ -34,6 +34,9 @@ renderHead addr active tab =
     let cls = classList [("tabs__tab", True), ("tabs__tab_active_yes", active == tab.id)] in
     div [cls, onClick addr <| ActiveTab tab.id] [text tab.title]
 
+activate : String -> State -> State
+activate id _ = { activeTab = id }
+
 render : Address Event -> State -> List Tab -> Html
 render addr st items =
     let active = getActive st.activeTab items in
@@ -44,7 +47,7 @@ render addr st items =
     ]
 
 update : Event -> State -> State
-update (ActiveTab id) st = { activeTab = id }
+update (ActiveTab id) = activate id
 
 init : State
 init = { activeTab = "empty" }

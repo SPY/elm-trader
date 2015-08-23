@@ -12,31 +12,28 @@ import SymbolsTable
 import SymbolHistory
 
 import Component.Layout as Layout
-import Component.Tabs as Tabs
+import Component.ChartTabs as ChartTabs
 
 type Event = Noop
     | Quotes Quotes.Message
     | SymbolsTable SymbolsTable.Event
     | HistoryLoaded SymbolHistory.History
-    | ChartTabs Tabs.Event
+    | ChartTabs ChartTabs.Event
 
 type alias State = {
     symbols : SymbolsTable.State,
-    charts : List String,
     history : List SymbolHistory.History,
-    chartTabs : Tabs.State
+    chartTabs : ChartTabs.State
 }
 
 init : (State, Effects Event)
 init = 
-    let request = { symbol = "EURUSD.m", year = 2015, period = SymbolHistory.M5, from = 54722, to = 67298 } in
-    let requestHistory = Effects.task (SymbolHistory.request request) |> Effects.map (always Noop) in
+    let (chartsSt, chartEffs) = ChartTabs.init in
     ({
         symbols = SymbolsTable.init,
-        charts = ["EURUSD.m"],
         history = [],
-        chartTabs = Tabs.update (Tabs.ActiveTab "EURUSD.m") Tabs.init
-    }, requestHistory)
+        chartTabs = chartsSt
+    }, Effects.map (always Noop) chartEffs)
 
 update : Event -> State -> (State, Effects Event)
 update event st = case event of
@@ -45,27 +42,21 @@ update event st = case event of
     Quotes msg ->
         ({ st | symbols <- SymbolsTable.update msg st.symbols }, Effects.none)
     SymbolsTable (SymbolsTable.OpenChart symbol) ->
-        let request = { symbol = symbol, year = 2015, period = SymbolHistory.M5, from = 54722, to = 67298 } in
-        let requestHistory = Effects.task (SymbolHistory.request request) |> Effects.map (always Noop) in
-        ({ st | charts <-  st.charts ++ [symbol], chartTabs <- Tabs.update (Tabs.ActiveTab symbol) st.chartTabs }, requestHistory)
+        let (chartsSt, chartEffs) = ChartTabs.addChart symbol st.chartTabs in
+        ({ st | chartTabs <- chartsSt }, Effects.map (always Noop) chartEffs)
     HistoryLoaded history ->
         ({ st | history <-  st.history ++ [history] }, Effects.none)
     ChartTabs ev ->
-        ({ st | chartTabs <- Tabs.update ev st.chartTabs }, Effects.none)
+        let (chartsSt, chartEffs) = ChartTabs.update ev st.chartTabs in
+        ({ st | chartTabs <- chartsSt }, Effects.map (always Noop) chartEffs)
 
 render : Address Event -> State -> Html
 render addr st = div [class "app"] [
         Layout.render Layout.Horizontal [
             { size = Just 260, content = SymbolsTable.render (forwardTo addr SymbolsTable) st.symbols },
-            { size = Nothing, content = renderCharts addr st}
+            { size = Nothing, content = ChartTabs.render (forwardTo addr ChartTabs) st.chartTabs }
         ]
     ]
-
-renderCharts : Address Event -> State -> Html
-renderCharts addr st =
-    let chartTab chart = { title = chart, content = \() -> div [class "chart"] [text chart], id = chart } in
-    let chartTabs = List.map chartTab st.charts in
-    Tabs.render (forwardTo addr ChartTabs) st.chartTabs chartTabs
 
 historyToEvent : Result String SymbolHistory.History -> Event
 historyToEvent = toMaybe >> Maybe.map HistoryLoaded >> withDefault Noop
