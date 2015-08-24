@@ -7,25 +7,29 @@ import Signal exposing (Address, forwardTo)
 
 import SymbolHistory
 import Component.Tabs as Tabs
+import Component.SymbolChart as Chart
+
+type alias ChartTab = {
+    symbol: String,
+    id: String,
+    chart: Chart.State
+}
 
 type alias State = {
-    charts: List String,
+    charts: List ChartTab,
     period: SymbolHistory.Period,
-    tabs: Tabs.State
+    tabs: Tabs.State,
+    id: Int
 }
 
 type Event = OpenChart String | TabsEvent Tabs.Event
-
-loadMoreHistory : String -> SymbolHistory.Period -> Effects ()
-loadMoreHistory symbol period =
-    let request = { symbol = symbol, year = 2015, period = period, from = 54722, to = 67298 } in
-    Effects.task <| SymbolHistory.request request
 
 init : (State, Effects ())
 init = addChart "EURUSD.m" {
         charts = [],
         period = SymbolHistory.M15,
-        tabs = Tabs.init
+        tabs = Tabs.init,
+        id = 1
     }
 
 update : Event -> State -> (State, Effects ())
@@ -34,13 +38,17 @@ update event st = case event of
     TabsEvent ev -> ({ st | tabs <- Tabs.update ev st.tabs }, Effects.none)
 
 addChart : String -> State -> (State, Effects ())
-addChart chart st = ({ st |
-        charts <- st.charts ++ [chart],
-        tabs <- Tabs.activate chart st.tabs
-    }, loadMoreHistory chart st.period)
+addChart symbol st = 
+    let (chart, chartEffs) = Chart.init symbol in
+    let tab = { symbol = symbol, chart = chart, id = symbol ++ (toString st.id) } in
+    ({ st |
+        charts <- st.charts ++ [tab],
+        tabs <- Tabs.activate tab.id st.tabs,
+        id <- st.id + 1
+    }, chartEffs)
 
 render : Address Event -> State -> Html
 render addr st =
-    let chartTab chart = { title = chart, content = \() -> div [class "chart"] [text chart], id = chart } in
+    let chartTab tab = { title = tab.symbol, content = \() -> Chart.render tab.chart, id = tab.id } in
     let chartTabs = List.map chartTab st.charts in
     Tabs.render (forwardTo addr TabsEvent) st.tabs chartTabs

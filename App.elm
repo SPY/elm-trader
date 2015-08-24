@@ -17,12 +17,12 @@ import Component.ChartTabs as ChartTabs
 type Event = Noop
     | Quotes Quotes.Message
     | SymbolsTable SymbolsTable.Event
-    | HistoryLoaded SymbolHistory.History
+    | HistoryLoaded String SymbolHistory.Period SymbolHistory.HistoryChunk
     | ChartTabs ChartTabs.Event
 
 type alias State = {
     symbols : SymbolsTable.State,
-    history : List SymbolHistory.History,
+    history : SymbolHistory.History,
     chartTabs : ChartTabs.State
 }
 
@@ -31,7 +31,7 @@ init =
     let (chartsSt, chartEffs) = ChartTabs.init in
     ({
         symbols = SymbolsTable.init,
-        history = [],
+        history = SymbolHistory.empty,
         chartTabs = chartsSt
     }, Effects.map (always Noop) chartEffs)
 
@@ -44,8 +44,8 @@ update event st = case event of
     SymbolsTable (SymbolsTable.OpenChart symbol) ->
         let (chartsSt, chartEffs) = ChartTabs.addChart symbol st.chartTabs in
         ({ st | chartTabs <- chartsSt }, Effects.map (always Noop) chartEffs)
-    HistoryLoaded history ->
-        ({ st | history <-  st.history ++ [history] }, Effects.none)
+    HistoryLoaded sym period chunk ->
+        ({ st | history <- SymbolHistory.addChunk sym period chunk st.history }, Effects.none)
     ChartTabs ev ->
         let (chartsSt, chartEffs) = ChartTabs.update ev st.chartTabs in
         ({ st | chartTabs <- chartsSt }, Effects.map (always Noop) chartEffs)
@@ -58,10 +58,10 @@ render addr st = div [class "app"] [
         ]
     ]
 
-historyToEvent : Result String SymbolHistory.History -> Event
-historyToEvent = toMaybe >> Maybe.map HistoryLoaded >> withDefault Noop
+historyToEvent : Result String (String, SymbolHistory.Period, SymbolHistory.HistoryChunk) -> Event
+historyToEvent = toMaybe >> Maybe.map (\(s, p, h) -> HistoryLoaded s p h) >> withDefault Noop
 
 inputs = [
         Signal.map Quotes Quotes.quotes,
-        Signal.map (Maybe.map historyToEvent >> withDefault Noop) <| SymbolHistory.response
+        Signal.map (Maybe.map historyToEvent >> withDefault Noop) SymbolHistory.response
     ]

@@ -12,6 +12,7 @@
 	flex-grow: 1;
 	border: 1px solid black;
 	border-top: none;
+	padding: 10px;
 }
 
 .tabs__tab {
