@@ -1,4 +1,16 @@
-module SymbolHistory (Period(..), History, HistoryChunk, OHLC, task, request, response, addChunk, empty) where
+module SymbolHistory (
+    Period(..),
+    History,
+    HistoryChunk,
+    OHLC,
+    task,
+    request,
+    response,
+    addChunk,
+    empty,
+    last,
+    lookup
+    ) where
 
 import Native.SymbolHistory
 
@@ -8,6 +20,8 @@ import Json.Decode exposing (..)
 import Signal
 import Maybe
 import Dict exposing (Dict)
+import Date
+import Time exposing (Time)
 
 type Period = M1 | M5 | M15
 
@@ -85,5 +99,25 @@ addChunk sym period chunk =
     let add = Maybe.withDefault [] >> ((::) chunk) >> Just in
     Dict.update (sym, toInt period) add
 
+getCurrentTime : Task x Time
+getCurrentTime =
+  Native.SymbolHistory.getCurrentTime
+
+duration : Period -> Int
+duration period = case period of
+    M1 -> 1
+    M5 -> 5
+    M15 -> 15
+
 last : String -> Period -> Int -> History -> Task x ()
-last sym period num history = Task.succeed ()
+last sym period num history =
+    getCurrentTime `Task.andThen` \now ->
+        let year2015 = 1420063200000.0 in
+        let currentBar = floor <| (now - year2015) / (toFloat <| duration period * 60 * 1000) in
+        request { symbol = sym, year = 2015, period = period, from = (currentBar - num), to = currentBar }
+
+lastAfter : String -> Period -> Int -> Int -> Task x ()
+lastAfter sym period year idx = Task.succeed ()
+
+lookup : String -> Period -> History -> Maybe (List HistoryChunk)
+lookup sym period = Dict.get (sym, toInt period)

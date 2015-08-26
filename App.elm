@@ -27,11 +27,12 @@ type alias State = {
 }
 
 init : (State, Effects Event)
-init = 
-    let (chartsSt, chartEffs) = ChartTabs.init in
+init =
+    let history = SymbolHistory.empty in
+    let (chartsSt, chartEffs) = ChartTabs.init history in
     ({
         symbols = SymbolsTable.init,
-        history = SymbolHistory.empty,
+        history = history,
         chartTabs = chartsSt
     }, Effects.map (always Noop) chartEffs)
 
@@ -45,7 +46,9 @@ update event st = case event of
         let (chartsSt, chartEffs) = ChartTabs.addChart symbol st.chartTabs in
         ({ st | chartTabs <- chartsSt }, Effects.map (always Noop) chartEffs)
     HistoryLoaded sym period chunk ->
-        ({ st | history <- SymbolHistory.addChunk sym period chunk st.history }, Effects.none)
+        let history' = SymbolHistory.addChunk sym period chunk st.history in
+        let (tabs, effs) = ChartTabs.update (ChartTabs.HistoryUpdate history') st.chartTabs in
+        ({ st | history <- history', chartTabs <- tabs }, Effects.map (always Noop) effs)
     ChartTabs ev ->
         let (chartsSt, chartEffs) = ChartTabs.update ev st.chartTabs in
         ({ st | chartTabs <- chartsSt }, Effects.map (always Noop) chartEffs)
