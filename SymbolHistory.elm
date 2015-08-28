@@ -114,7 +114,7 @@ last sym period num history =
     getCurrentTime `Task.andThen` \now ->
         let year2015 = 1420063200000.0 in
         let currentBar = floor <| (now - year2015) / (toFloat <| duration period * 60 * 1000) in
-        request { symbol = sym, year = 2015, period = period, from = (currentBar - num), to = currentBar }
+        request { symbol = sym, year = 2015, period = period, from = (currentBar - num + 1), to = currentBar }
 
 lastAfter : String -> Period -> Int -> Int -> Task x ()
 lastAfter sym period year idx = Task.succeed ()

@@ -6,6 +6,7 @@ import Html.Attributes exposing (class)
 import Effects exposing (Effects)
 import Maybe exposing (withDefault)
 import Result exposing (toMaybe)
+import Window exposing (dimensions)
 
 import Quotes
 import SymbolsTable
@@ -19,11 +20,13 @@ type Event = Noop
     | SymbolsTable SymbolsTable.Event
     | HistoryLoaded String SymbolHistory.Period SymbolHistory.HistoryChunk
     | ChartTabs ChartTabs.Event
+    | Dimensions (Int, Int)
 
 type alias State = {
     symbols : SymbolsTable.State,
     history : SymbolHistory.History,
-    chartTabs : ChartTabs.State
+    chartTabs : ChartTabs.State,
+    layout : Layout.State
 }
 
 init : (State, Effects Event)
@@ -33,7 +36,8 @@ init =
     ({
         symbols = SymbolsTable.init,
         history = history,
-        chartTabs = chartsSt
+        chartTabs = chartsSt,
+        layout = Layout.init Layout.Horizontal [Just 250, Nothing]
     }, Effects.map (always Noop) chartEffs)
 
 update : Event -> State -> (State, Effects Event)
@@ -52,12 +56,15 @@ update event st = case event of
     ChartTabs ev ->
         let (chartsSt, chartEffs) = ChartTabs.update ev st.chartTabs in
         ({ st | chartTabs <- chartsSt }, Effects.map (always Noop) chartEffs)
+    Dimensions (w, h) ->
+        ({ st | layout <- Layout.update { width = w, height = h } st.layout }, Effects.none)
+
 
 render : Address Event -> State -> Html
 render addr st = div [class "app"] [
-        Layout.render Layout.Horizontal [
-            { size = Just 260, content = SymbolsTable.render (forwardTo addr SymbolsTable) st.symbols },
-            { size = Nothing, content = ChartTabs.render (forwardTo addr ChartTabs) st.chartTabs }
+        Layout.render st.layout [
+            \_ -> SymbolsTable.render (forwardTo addr SymbolsTable) st.symbols,
+            \_ -> ChartTabs.render (forwardTo addr ChartTabs) st.chartTabs
         ]
     ]
 
@@ -66,5 +73,6 @@ historyToEvent = toMaybe >> Maybe.map (\(s, p, h) -> HistoryLoaded s p h) >> wit
 
 inputs = [
         Signal.map Quotes Quotes.quotes,
-        Signal.map (Maybe.map historyToEvent >> withDefault Noop) SymbolHistory.response
+        Signal.map (Maybe.map historyToEvent >> withDefault Noop) SymbolHistory.response,
+        Signal.map Dimensions Window.dimensions
     ]
