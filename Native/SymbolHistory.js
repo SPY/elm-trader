@@ -64,12 +64,7 @@ Elm.Native.SymbolHistory.make = function(localRuntime) {
 		});
 	}
 
-	var getCurrentTime = Task.asyncFunction(function(callback) {
-		return callback(Task.succeed(Date.now()));
-	});
-
 	return localRuntime.Native.SymbolHistory.values = {
-		load: curry(load),
-		getCurrentTime: getCurrentTime
+		load: curry(load)
 	};
 };

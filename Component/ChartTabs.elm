@@ -8,6 +8,7 @@ import Signal exposing (Address, forwardTo)
 import SymbolHistory
 import Component.Tabs as Tabs
 import Component.SymbolChart as Chart
+import Component.Layout as Layout
 
 type alias ChartTab = {
     symbol: String,
@@ -56,8 +57,8 @@ addChart symbol st =
         id <- st.id + 1
     }, chartEffs)
 
-render : Address Event -> State -> Html
-render addr st =
-    let chartTab tab = { title = tab.symbol, content = \() -> Chart.render tab.chart, id = tab.id } in
+render : Address Event -> State -> Layout.Dimensions -> Html
+render addr st dims =
+    let chartTab tab = { title = tab.symbol, content = \() -> Chart.render tab.chart dims, id = tab.id } in
     let chartTabs = List.map chartTab st.charts in
     Tabs.render (forwardTo addr TabsEvent) st.tabs chartTabs

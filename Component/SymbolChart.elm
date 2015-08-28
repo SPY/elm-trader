@@ -9,6 +9,7 @@ import Html exposing (Html, div, text)
 import Html.Attributes exposing (class)
 
 import SymbolHistory
+import Component.Layout as Layout
 
 type Action = UpdateData SymbolHistory.History
 
@@ -23,10 +24,10 @@ init sym period history =
     let getData = SymbolHistory.last sym period 100 history |> Effects.task in
     ({ symbol = sym, period = period, data = Nothing }, getData)
 
-render : State -> Html
-render st =
+render : State -> Layout.Dimensions -> Html
+render st dims =
     let content = Maybe.map (Array.length >> toString >> ((++) "Bars loaded: ")) st.data |> Maybe.withDefault "Loading data..." in
-    div [class "chart"] [text content]
+    div [class "chart"] [text (content ++ " Dimensions: " ++ (toString  dims))]
 
 update : Action -> State -> (State, Effects ())
 update action st = case action of

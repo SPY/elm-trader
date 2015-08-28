@@ -23,6 +23,8 @@ import Dict exposing (Dict)
 import Date
 import Time exposing (Time)
 
+import Aux
+
 type Period = M1 | M5 | M15
 
 toInt : Period -> Int
@@ -99,10 +101,6 @@ addChunk sym period chunk =
     let add = Maybe.withDefault [] >> ((::) chunk) >> Just in
     Dict.update (sym, toInt period) add
 
-getCurrentTime : Task x Time
-getCurrentTime =
-  Native.SymbolHistory.getCurrentTime
-
 duration : Period -> Int
 duration period = case period of
     M1 -> 1
@@ -111,7 +109,7 @@ duration period = case period of
 
 last : String -> Period -> Int -> History -> Task x ()
 last sym period num history =
-    getCurrentTime `Task.andThen` \now ->
+    Aux.getCurrentTime `Task.andThen` \now ->
         let year2015 = 1420063200000.0 in
         let currentBar = floor <| (now - year2015) / (toFloat <| duration period * 60 * 1000) in
         request { symbol = sym, year = 2015, period = period, from = (currentBar - num + 1), to = currentBar }

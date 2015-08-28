@@ -11,6 +11,7 @@ import Window exposing (dimensions)
 import Quotes
 import SymbolsTable
 import SymbolHistory
+import Aux
 
 import Component.Layout as Layout
 import Component.ChartTabs as ChartTabs
@@ -33,12 +34,13 @@ init : (State, Effects Event)
 init =
     let history = SymbolHistory.empty in
     let (chartsSt, chartEffs) = ChartTabs.init history in
+    let getDimsEff = Effects.map Dimensions <| Effects.task Aux.dimensions in
     ({
         symbols = SymbolsTable.init,
         history = history,
         chartTabs = chartsSt,
         layout = Layout.init Layout.Horizontal [Just 250, Nothing]
-    }, Effects.map (always Noop) chartEffs)
+    }, Effects.batch [Effects.map (always Noop) chartEffs, getDimsEff])
 
 update : Event -> State -> (State, Effects Event)
 update event st = case event of
@@ -64,7 +66,7 @@ render : Address Event -> State -> Html
 render addr st = div [class "app"] [
         Layout.render st.layout [
             \_ -> SymbolsTable.render (forwardTo addr SymbolsTable) st.symbols,
-            \_ -> ChartTabs.render (forwardTo addr ChartTabs) st.chartTabs
+            ChartTabs.render (forwardTo addr ChartTabs) st.chartTabs
         ]
     ]
 
