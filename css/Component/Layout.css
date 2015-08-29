@@ -16,11 +16,6 @@
 
 .layout__item {
 	display: flex;
-	margin-left: 5px;
-}
-
-.layout__item:first-child {
-	margin-left: 0;
 }
 
 .layout_direction_horizontal .layout__item {

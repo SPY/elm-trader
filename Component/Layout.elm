@@ -35,14 +35,11 @@ update dims st = { st | dimensions <- dims }
 
 renderItem : Direction -> Dimensions -> Item -> (Dimensions -> Html) -> Html
 renderItem dir dims item render =
-    let attrs = case item.size of
-        Just size ->
-            let attr = if dir == Horizontal then "width" else "height" in
-            [style [(attr, toString size ++ "px")], class "layout__item"]
-        Nothing ->
-            [class "layout__item layout__item_autosize_yes"]
-    in
-    div attrs [render dims]
+    let attrs = [style [
+            ("width", toString dims.width ++ "px"),
+            ("height", toString dims.height ++ "px")
+        ], class "layout__item"]
+    in div attrs [render dims]
 
 calcDimentions : State -> List Dimensions
 calcDimentions st =

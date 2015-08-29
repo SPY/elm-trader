@@ -1,3 +1,10 @@
+.symbols-table {
+	overflow: auto;
+	border: 1px solid black;
+	width: 100%;
+	margin: 10px 0;
+}
+
 .symbols-table_trend_up {
 	color: green;
 }
@@ -9,6 +16,12 @@
 	padding: 3px 5px;
 	text-align: left;
 	border-bottom: 1px solid black;
+}
+
+.symbols-table__row:last-child .symbols-table__name,
+.symbols-table__row:last-child .symbols-table__ask,
+.symbols-table__row:last-child .symbols-table__bid {
+	border-bottom: none;
 }
 
 .symbols-table__name {
@@ -23,8 +36,7 @@
 	cursor: pointer;
 }
 
-.symbols-table {
+.symbols-table__table {
 	border-collapse: collapse;
-	border: 1px solid black;
 	width: 100%;
 }

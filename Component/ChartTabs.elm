@@ -61,4 +61,4 @@ render : Address Event -> State -> Layout.Dimensions -> Html
 render addr st dims =
     let chartTab tab = { title = tab.symbol, content = \() -> Chart.render tab.chart dims, id = tab.id } in
     let chartTabs = List.map chartTab st.charts in
-    Tabs.render (forwardTo addr TabsEvent) st.tabs chartTabs
+    div [class "chart-tabs"] [Tabs.render (forwardTo addr TabsEvent) st.tabs chartTabs]

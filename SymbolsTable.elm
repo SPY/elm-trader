@@ -37,13 +37,15 @@ symbolRow addr (name, symbol) =
 
 render : Address Event -> State -> Html
 render addr symbols =
-    table [class "symbols-table"] ([
-        tr [class "symbols-table__head"] [
-            th [class "symbols-table__name"] [text "Symbol"],
-            th [class "symbols-table__ask"] [text "Ask"],
-            th [class "symbols-table__bid"] [text "Bid"]
-        ]
-    ] ++ (List.map (symbolRow addr) <| Dict.toList symbols))
+    div [class "symbols-table"] [
+        table [class "symbols-table__table"] ([
+            tr [class "symbols-table__head"] [
+                th [class "symbols-table__name"] [text "Symbol"],
+                th [class "symbols-table__ask"] [text "Ask"],
+                th [class "symbols-table__bid"] [text "Bid"]
+            ]
+        ] ++ (List.map (symbolRow addr) <| Dict.toList symbols))
+    ]
 
 update : Quotes.Message -> State -> State
 update msg syms =
