@@ -36,7 +36,7 @@ draw width height data =
     let candle idx bar =
         let h = toHeight <| abs <| bar.open - bar.close in
         let shape = Canvas.rect (toFloat <| barWidth - 2) h in
-        let barForm = if bar.open > bar.close
+        let body = if bar.open > bar.close
             then Canvas.filled Color.black shape
             else Canvas.outlined (Canvas.solid Color.black) shape
         in
@@ -51,7 +51,7 @@ draw width height data =
             Canvas.traced (Canvas.solid Color.black) path
         in
         let x = (negate <| toFloat width / 2) + (toFloat <| idx * barWidth) - (toFloat barWidth / 2) in
-        Canvas.move (x, y <| (bar.open + bar.close) / 2) <| Canvas.group [barForm, top, bottom]
+        Canvas.move (x, y <| (bar.open + bar.close) / 2) <| Canvas.group [top, body, bottom]
     in fromElement <| Canvas.collage width height <| Array.toList <| Array.indexedMap candle data
 
 barWidth : Int
@@ -70,9 +70,9 @@ clipData width data =
     let desired = ceiling <| toFloat width / toFloat barWidth in
     let isJust = Maybe.map (always True) >> Maybe.withDefault False in
     let pure = Array.filter isJust >> Array.map fromJust <| data in
-    let len = Array.length data in
+    let len = Array.length pure in
     let bars = min len desired in
-    Array.slice (len - bars) desired pure
+    Array.slice (len - bars) bars pure
 
 render : State -> Layout.Dimensions -> Html
 render st dims =
