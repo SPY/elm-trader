@@ -30,6 +30,7 @@ init sym period history =
 
 draw : Int -> Int -> Array SymbolHistory.OHLC -> Html
 draw width height data =
+    let bars = Debug.log "in draw" <| Array.length data in
     let (l, h) = extrema data in
     let toHeight val = toFloat height * (val / (h - l)) in
     let y val = toHeight (val - l) - (toFloat height/2) in
@@ -72,7 +73,7 @@ clipData width data =
     let pure = Array.filter isJust >> Array.map fromJust <| data in
     let len = Array.length pure in
     let bars = min len desired in
-    Array.slice (len - bars) bars pure
+    Array.slice (len - bars) len pure
 
 render : State -> Layout.Dimensions -> Html
 render st dims =
