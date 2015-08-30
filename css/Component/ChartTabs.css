@@ -1,0 +1,9 @@
+.chart-tabs {
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+}
+
+.chart-tabs > * {
+	flex-grow: 1;
+}

@@ -25,13 +25,23 @@ import Time exposing (Time)
 
 import Aux
 
-type Period = M1 | M5 | M15
+type Period = M1 | M5 | M15 | M30 | H1
 
 toInt : Period -> Int
 toInt p = case p of
     M1 -> 1
     M5 -> 2
     M15 -> 3
+    M30 -> 4
+    H1 -> 5
+
+duration : Period -> Int
+duration period = case period of
+    M1 -> 1
+    M5 -> 5
+    M15 -> 15
+    M30 -> 30
+    H1 -> 60
 
 type alias OHLC = {
     open: Float,
@@ -100,12 +110,6 @@ addChunk : String -> Period -> HistoryChunk -> History -> History
 addChunk sym period chunk =
     let add = Maybe.withDefault [] >> ((::) chunk) >> Just in
     Dict.update (sym, toInt period) add
-
-duration : Period -> Int
-duration period = case period of
-    M1 -> 1
-    M5 -> 5
-    M15 -> 15
 
 last : String -> Period -> Int -> History -> Task x ()
 last sym period num history =

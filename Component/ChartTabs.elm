@@ -31,7 +31,7 @@ type Event = OpenChart String
 init : SymbolHistory.History -> (State, Effects ())
 init history = addChart "EURUSD.m" {
         charts = [],
-        period = SymbolHistory.M15,
+        period = SymbolHistory.H1,
         tabs = Tabs.init,
         history = history,
         id = 1
