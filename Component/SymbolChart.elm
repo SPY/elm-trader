@@ -7,8 +7,8 @@ import Array exposing (Array)
 import Effects as Effects exposing (Effects)
 import Html exposing (Html, div, text, fromElement)
 import Html.Attributes exposing (class)
-import Graphics.Collage as Canvas
-import Color
+import Graphics.Collage as Canvas exposing (rect, move, group, traced, segment, solid, dashed)
+import Color exposing (black, white, gray)
 
 import SymbolHistory exposing (OHLC, Period, History)
 import Component.Layout as Layout
@@ -28,31 +28,40 @@ init sym period history =
     let getData = SymbolHistory.last sym period 200 history |> Effects.task in
     ({ symbol = sym, period = period, data = Nothing }, getData)
 
-type alias ViewCoordinate = {
+type alias View = {
     y: Float -> Float,
     x: Float -> Float
 }
 
-drawCandle : ViewCoordinate -> Int -> OHLC -> Canvas.Form
+drawCandle : View -> Int -> OHLC -> Canvas.Form
 drawCandle view idx bar =
     let h = abs <| view.y bar.open - view.y bar.close in
-    let shape = Canvas.rect (toFloat <| barWidth - 2) h in
+    let shape = rect (toFloat <| barWidth - 2) h in
+    let solidBlack = solid black in
     let body = if bar.open > bar.close
-        then Canvas.filled Color.black shape
-        else Canvas.outlined (Canvas.solid Color.black) shape
+        then Canvas.filled black shape
+        else Canvas.outlined solidBlack shape
     in
     let top =
         let h' = view.y bar.high - (view.y <| max bar.open bar.close) in
-        let path = Canvas.segment (0, h/2) (0, h/2 + h') in
-        Canvas.traced (Canvas.solid Color.black) path
+        traced solidBlack <| segment (0, h/2) (0, h/2 + h')
     in
     let bottom =
+        let half = negate h/2 in
         let h' = (view.y <| min bar.open bar.close) - view.y bar.low in
-        let path = Canvas.segment (0, negate h/2) (0, (negate h/2) - h') in
-        Canvas.traced (Canvas.solid Color.black) path
+        traced solidBlack <| segment (0, half) (0, half - h')
     in
     let x = view.x <|(toFloat <| idx * barWidth) - (toFloat barWidth / 2) in
-    Canvas.move (x, view.y <| (bar.open + bar.close) / 2) <| Canvas.group [top, body, bottom]
+    move (x, view.y <| (bar.open + bar.close) / 2) <| group [top, body, bottom]
+
+drawGrid : Int -> Int -> (Float, Float) -> Canvas.Form
+drawGrid width height (low, high) =
+    let h = toFloat height - 2 in
+    let y idx = (negate <| h/2) + h/9*(toFloat idx) in
+    let level idx =
+        let half = toFloat width/2 in
+        traced (dashed gray) <| segment (negate half, y idx) (half, y idx)
+    in group <| List.map level [0..9]
 
 draw : Int -> Int -> Array SymbolHistory.OHLC -> Html
 draw width height data =
@@ -61,7 +70,9 @@ draw width height data =
     let x val = (negate <| toFloat width / 2) + val in
     let view = { y = y, x = x } in
     let candle = drawCandle view in
-    fromElement <| Canvas.collage width height <| Array.toList <| Array.indexedMap candle data
+    let bars = Array.toList <| Array.indexedMap candle data in
+    let grid = drawGrid width height (l, h) in
+    fromElement <| Canvas.collage width height <| grid :: bars
 
 barWidth : Int
 barWidth = 10

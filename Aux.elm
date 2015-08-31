@@ -1,4 +1,4 @@
-module Aux where
+module Aux (getCurrentTime, dimensions) where
 
 import Time exposing (Time)
 import Task exposing (Task)
