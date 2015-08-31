@@ -10,7 +10,7 @@ import Html.Attributes exposing (class)
 import Graphics.Collage as Canvas
 import Color
 
-import SymbolHistory
+import SymbolHistory exposing (OHLC, Period, History)
 import Component.Layout as Layout
 
 import Debug
@@ -23,37 +23,45 @@ type alias State = {
     data: Maybe (Array (Maybe SymbolHistory.OHLC))
 }
 
-init : String -> SymbolHistory.Period -> SymbolHistory.History -> (State, Effects ())
+init : String -> Period -> History -> (State, Effects ())
 init sym period history =
     let getData = SymbolHistory.last sym period 200 history |> Effects.task in
     ({ symbol = sym, period = period, data = Nothing }, getData)
 
+type alias ViewCoordinate = {
+    y: Float -> Float,
+    x: Float -> Float
+}
+
+drawCandle : ViewCoordinate -> Int -> OHLC -> Canvas.Form
+drawCandle view idx bar =
+    let h = abs <| view.y bar.open - view.y bar.close in
+    let shape = Canvas.rect (toFloat <| barWidth - 2) h in
+    let body = if bar.open > bar.close
+        then Canvas.filled Color.black shape
+        else Canvas.outlined (Canvas.solid Color.black) shape
+    in
+    let top =
+        let h' = view.y bar.high - (view.y <| max bar.open bar.close) in
+        let path = Canvas.segment (0, h/2) (0, h/2 + h') in
+        Canvas.traced (Canvas.solid Color.black) path
+    in
+    let bottom =
+        let h' = (view.y <| min bar.open bar.close) - view.y bar.low in
+        let path = Canvas.segment (0, negate h/2) (0, (negate h/2) - h') in
+        Canvas.traced (Canvas.solid Color.black) path
+    in
+    let x = view.x <|(toFloat <| idx * barWidth) - (toFloat barWidth / 2) in
+    Canvas.move (x, view.y <| (bar.open + bar.close) / 2) <| Canvas.group [top, body, bottom]
+
 draw : Int -> Int -> Array SymbolHistory.OHLC -> Html
 draw width height data =
-    let bars = Debug.log "in draw" <| Array.length data in
     let (l, h) = extrema data in
-    let toHeight val = toFloat height * (val / (h - l)) in
-    let y val = toHeight (val - l) - (toFloat height/2) in
-    let candle idx bar =
-        let h = toHeight <| abs <| bar.open - bar.close in
-        let shape = Canvas.rect (toFloat <| barWidth - 2) h in
-        let body = if bar.open > bar.close
-            then Canvas.filled Color.black shape
-            else Canvas.outlined (Canvas.solid Color.black) shape
-        in
-        let top =
-            let h' = toHeight <| bar.high - max bar.open bar.close in
-            let path = Canvas.segment (0, h/2) (0, h/2 + h') in
-            Canvas.traced (Canvas.solid Color.black) path
-        in
-        let bottom =
-            let h' = toHeight <| min bar.open bar.close - bar.low in
-            let path = Canvas.segment (0, negate h/2) (0, (negate h/2) - h') in
-            Canvas.traced (Canvas.solid Color.black) path
-        in
-        let x = (negate <| toFloat width / 2) + (toFloat <| idx * barWidth) - (toFloat barWidth / 2) in
-        Canvas.move (x, y <| (bar.open + bar.close) / 2) <| Canvas.group [top, body, bottom]
-    in fromElement <| Canvas.collage width height <| Array.toList <| Array.indexedMap candle data
+    let y val = toFloat height * ((val - l) / (h - l)) - (toFloat height/2) in
+    let x val = (negate <| toFloat width / 2) + val in
+    let view = { y = y, x = x } in
+    let candle = drawCandle view in
+    fromElement <| Canvas.collage width height <| Array.toList <| Array.indexedMap candle data
 
 barWidth : Int
 barWidth = 10
